@@ -1,41 +1,36 @@
 import React, { Suspense, useRef, useState } from "react";
-import {
-  Canvas,
-  useFrame,
-  MeshProps,
-  ThreeElements,
-  useLoader,
-} from "@react-three/fiber";
-import {
-  Backdrop,
-  Environment,
-  OrbitControls,
-  PerspectiveCamera,
-  Stage,
-} from "@react-three/drei";
-import "./App.css";
+import { Canvas, ThreeElements, useLoader } from "@react-three/fiber";
+import { Loader, OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import styles from "./App.module.scss";
 import { Mesh, Texture } from "three";
 import * as THREE from "three";
-
-import cardFrame from "./assets/3d/cardFrame.glb";
+import clsx from "clsx";
+// import cardFrame from "./assets/3d/cardFrame.glb";
+// import GltfModel from "./components/GltfModel";
 import sportsPerson1Img from "./assets/img/sportsPerson1.jpg";
-import GltfModel from "./components/GltfModel";
+import sportsPerson2Img from "./assets/img/sportsPerson2.jpg";
+import sportsPerson3Img from "./assets/img/sportsPerson3.jpg";
 
 function App() {
-  return <Box />;
+  return (
+    <Suspense fallback={<Loader />}>
+      <Main />
+    </Suspense>
+  );
 }
 
-function Box(props: ThreeElements["mesh"]) {
+function Main() {
   const [artifactType, setArtifactType] = useState<"card" | "prism" | "cube">(
     "card"
   );
-
-  const texture = useLoader(THREE.TextureLoader, sportsPerson1Img);
-
+  const [textureInput, setTextureInput] = useState(sportsPerson1Img);
+  const texture = useLoader(THREE.TextureLoader, textureInput);
   return (
     <>
-      <div>
+      <div className={styles.artifactSelector}>
+        <label htmlFor="artifact">Select artifact: </label>
         <select
+          id="artifact"
           value={artifactType}
           onChange={(e) => {
             setArtifactType(e.target.value as typeof artifactType);
@@ -46,19 +41,50 @@ function Box(props: ThreeElements["mesh"]) {
           <option value={"cube"}>Cube</option>
         </select>
       </div>
+
       <div style={{ width: "50vw", height: "70vh" }}>
         <Canvas>
           <color attach="background" args={["#f5efe6"]} />
           <PerspectiveCamera position={[0, 0, 25]} makeDefault />
           <ambientLight />
           <pointLight position={[5, 5, 5]} />
+          <OrbitControls autoRotate />
           {artifactType === "card" ? <Card texture={texture} /> : null}
           {artifactType === "prism" ? <Prism texture={texture} /> : null}
           {artifactType === "cube" ? <Cube texture={texture} /> : null}
-          <OrbitControls autoRotate maxZoom={3} minZoom={0.5} />
         </Canvas>
       </div>
+
+      <TextureSelector
+        textureInput={textureInput}
+        setTextureInput={setTextureInput}
+      />
     </>
+  );
+}
+
+function TextureSelector({
+  textureInput,
+  setTextureInput,
+}: {
+  textureInput: string;
+  setTextureInput: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  return (
+    <div className={styles.textureSelector}>
+      {[sportsPerson1Img, sportsPerson2Img, sportsPerson3Img].map((img) => (
+        <div
+          key={img}
+          onClick={(e) => setTextureInput(img)}
+          className={clsx({
+            [styles.textureInput]: true,
+            [styles.selected]: textureInput === img,
+          })}
+        >
+          <img src={img} />
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -100,11 +126,6 @@ function CardFrame() {
 function Card({ texture }: { texture: Texture }) {
   const mesh = useRef<Mesh>(null!);
 
-  useFrame((state, delta) => {
-    // mesh.current.rotation.x += delta * 3;
-    // mesh.current.rotation.y += delta * 0.3;
-  });
-
   return (
     <>
       <mesh ref={mesh}>
@@ -124,18 +145,20 @@ function Card({ texture }: { texture: Texture }) {
 
 function Prism({ texture }: { texture: Texture }) {
   const mesh = useRef<Mesh>(null!);
+
   return (
     <mesh ref={mesh}>
       <cylinderGeometry args={[5, 5, 6, 3, 2]} />
       {/* <meshBasicMaterial attach="material-0" color={0xff0000} />
       <meshBasicMaterial attach="material-1" color={0x00ff00} />
       <meshBasicMaterial attach="material-2" color={0x0000ff} /> */}
-      <meshStandardMaterial attach="material-0" map={texture} />
       <meshStandardMaterial attach="material-1" map={texture} />
       <meshStandardMaterial attach="material-2" map={texture} />
+      <meshStandardMaterial attach="material-0" map={texture} />
     </mesh>
   );
 }
+
 function Cube({ texture }: { texture: Texture }) {
   return (
     <mesh>
