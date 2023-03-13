@@ -2,27 +2,27 @@ import React, { Suspense, useRef, useState } from "react";
 import { Canvas, ThreeElements, useLoader } from "@react-three/fiber";
 import { Loader, OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import styles from "./App.module.scss";
-import { Mesh, Texture } from "three";
+import { LinearMipMapLinearFilter, Mesh, NearestFilter, Texture } from "three";
 import * as THREE from "three";
 import clsx from "clsx";
-// import cardFrame from "./assets/3d/cardFrame.glb";
-// import GltfModel from "./components/GltfModel";
+
+import { StandingPictureFrame } from "./components/StandingPictureFrame";
 import sportsPerson1Img from "./assets/img/sportsPerson1.jpg";
 import sportsPerson2Img from "./assets/img/sportsPerson2.jpg";
 import sportsPerson3Img from "./assets/img/sportsPerson3.jpg";
 
 function App() {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<div>Loading..</div>}>
       <Main />
     </Suspense>
   );
 }
 
 function Main() {
-  const [artifactType, setArtifactType] = useState<"card" | "prism" | "cube">(
-    "card"
-  );
+  const [artifactType, setArtifactType] = useState<
+    "frame" | "card" | "prism" | "cube"
+  >("card");
   const [textureInput, setTextureInput] = useState(sportsPerson1Img);
   const texture = useLoader(THREE.TextureLoader, textureInput);
   return (
@@ -36,6 +36,7 @@ function Main() {
             setArtifactType(e.target.value as typeof artifactType);
           }}
         >
+          <option value={"frame"}>Frame</option>
           <option value={"card"}>Card</option>
           <option value={"prism"}>Prism</option>
           <option value={"cube"}>Cube</option>
@@ -43,16 +44,19 @@ function Main() {
       </div>
 
       <div style={{ width: "50vw", height: "70vh" }}>
-        <Canvas>
-          <color attach="background" args={["#f5efe6"]} />
-          <PerspectiveCamera position={[0, 0, 25]} makeDefault />
-          <ambientLight />
-          <pointLight position={[5, 5, 5]} />
-          <OrbitControls autoRotate />
-          {artifactType === "card" ? <Card texture={texture} /> : null}
-          {artifactType === "prism" ? <Prism texture={texture} /> : null}
-          {artifactType === "cube" ? <Cube texture={texture} /> : null}
-        </Canvas>
+        <Suspense fallback={<Loader />}>
+          <Canvas>
+            <color attach="background" args={["#f5efe6"]} />
+            <PerspectiveCamera position={[0, 0, 25]} makeDefault />
+            <ambientLight />
+            <pointLight position={[5, 5, 5]} />
+            <OrbitControls autoRotate />
+            {artifactType === "frame" ? <PhotoFrame texture={texture} /> : null}
+            {artifactType === "card" ? <Card texture={texture} /> : null}
+            {artifactType === "prism" ? <Prism texture={texture} /> : null}
+            {artifactType === "cube" ? <Cube texture={texture} /> : null}
+          </Canvas>
+        </Suspense>
       </div>
 
       <TextureSelector
@@ -86,6 +90,10 @@ function TextureSelector({
       ))}
     </div>
   );
+}
+
+function PhotoFrame({ texture }: { texture: Texture }) {
+  return <StandingPictureFrame texture={texture} />;
 }
 
 function CardFrame() {
